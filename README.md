@@ -1,5 +1,7 @@
-# Interfacing SceneNN and ROS
-Dataset tools for working with the [SceneNN](http://scenenn.net/) dataset and converting its raw sequence data to a ROS bag.
+# Interfacing SceneNN and ROS2 (Fork)
+Dataset tools for working with the [SceneNN](http://scenenn.net/) dataset and converting its raw sequence data to a ROS2 bag.
+
+This repository was forked from [ethz-asl/scenenn_to_rosbag](https://github.com/ethz-asl/scenenn_to_rosbag) and modified to work with ROS2 as part of my Final Year Project. Since the masked instance images are no longer available via the original scenenn Google Drive, it only converts the RGB-D images and trajectories into the ROS2 bag.
 
 ## How to use these tools
 1. Follow the instructions in the [scenenn repository](https://github.com/scenenn/scenenn) and download the SceneNN data.
@@ -14,9 +16,6 @@ Your `scenenn_data` folder structure should be at the end as follows:
     │   ├── image
     │   │   ├── image00001.png
     │   │   ├── ...
-    │   ├── mask
-    │   │   ├── mask00001.png
-    │   │   ├── ...
     │   ├── timestamp.txt
     │   ├── trajectory.log
     │   ├── ...
@@ -25,46 +24,35 @@ Your `scenenn_data` folder structure should be at the end as follows:
         ├──  kinect2.ini
     ```
 
-2. Clone this repository to the `src` folder of your catkin workspace, build your workspace and source it.
+2. Clone this repository.
 
     ```bash
-    cd <catkin_ws>/src
-    git clone git@github.com:ethz-asl/scenenn_ros_tools.git
-    catkin build
-    source <catkin_ws>/devel/setup.bash
+    git clone git@github.com:pang-yann/scenenn_to_ros2bag.git
     ```
 
-3. Make the Python script executable and run it as a ROS node to convert data from a SceneNN scene to a rosbag. The rosbag will contain a sequence of RGB and depth images, ground truth 2D instance label images, and relative transforms. Optionally, it can contain colorized ground truth 2D instance label images, colored pointclouds of the scene, and colored pointclouds of ground truth instance segments.
+3. Download dependencies
+    ```bash
+    sudo apt install ros-humble-cv-bridge
+    ```
+
+4. Run the Python script directly to convert data from a SceneNN scene to a ros2bag. The ros2bag will contain a sequence of RGB and depth images and relative transforms.
 
     ```bash
-    cd scenenn_ros_tools && chmod +x nodes/scenenn_to_rosbag.py
-    rosrun scenenn_ros_tools scenenn_to_rosbag.py --scenenn-path PATH/TO/scenenn_data --scene-id ID [--limit NUM] [--output-bag NAME]
+    python scripts/scenenn_to_ros2bag.py --scenenn-path PATH/TO/scenenn_data --scene-id ID --output-bag-dir PATH/TO/output_bags
     ```
 
     For example:
     ```bash
-    rosrun scenenn_ros_tools scenenn_to_rosbag.py --scenenn-path ../../../scenenn/download/scenenn_data/ --scene-id 066 --output-bag scenenn_066.bag
+    python scripts/scenenn_to_ros2bag.py --scenenn-path ../../../scenenn/download/scenenn_data/ --scene-id 066 --output-bag-dir ./bag/
     ```
     The output bag contains the following topics:
-      ```bash
-      # RGB and depth images
-      /camera/rgb/camera_info         : sensor_msgs/CameraInfo
-      /camera/rgb/image_raw           : sensor_msgs/Image
-      /camera/depth/camera_info       : sensor_msgs/CameraInfo
-      /camera/depth/image_raw         : sensor_msgs/Image        
+    ```bash
+    # RGB and depth images
+    /camera/rgb/camera_info         : sensor_msgs/CameraInfo
+    /camera/rgb/image_raw           : sensor_msgs/Image
+    /camera/depth/camera_info       : sensor_msgs/CameraInfo
+    /camera/depth/image_raw         : sensor_msgs/Image        
 
-      # Ground truth 2D instance segmentation image
-      /camera/instances/image_raw     : sensor_msgs/Image
-
-      # Ground truth colorized 2D instance segmentation image [Disabled by default]
-      /camera/instances/image_rgb     : sensor_msgs/Image
-
-      # Colored pointclouds of ground truth instance segments [Disabled by default]
-      /scenenet_node/object_segment   : sensor_msgs/PointCloud2
-
-      # Colored pointcloud of the scene                       [Disabled by default]
-      /scenenn_node/scene            : sensor_msgs/PointCloud2
-
-      # Transform from /scenenn_camera_frame to /world
-      /tf                             : tf/tfMessage
-      ```
+    # Transform from /scenenn_camera_frame to /world
+    /tf                             : tf/tfMessage
+    ```

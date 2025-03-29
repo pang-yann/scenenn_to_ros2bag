@@ -1,0 +1,3 @@
+[submodule "scenenn"]
+	path = scenenn
+	url = https://github.com/hkust-vgd/scenenn
